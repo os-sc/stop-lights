@@ -134,8 +134,17 @@ void setup() {
     pinMode(buttonNorth, INPUT);
     pinMode(buttonSouth, INPUT);
 
-    attachInterrupt(digitalPinToInterrupt(buttonNorth), intNorthButtonPressed(), RISING);
-    attachInterrupt(digitalPinToInterrupt(buttonSouth), intSouthButtonPressed(), RISING);
+    // Attach the Interrupts to handle the pedestrian button presses
+    attachInterrupt(
+        digitalPinToInterrupt(buttonNorth),
+        intNorthButtonPressed(),
+        RISING
+    );
+    attachInterrupt(
+        digitalPinToInterrupt(buttonSouth),
+        intSouthButtonPressed(),
+        RISING
+    );
 
     // On start set all lights to red as a security precaution
     closeAllLights(noYellow);
@@ -201,12 +210,22 @@ char checkForCars() {
 }
 
 void openLights(char lights, char direction) {
-
+    // TODO
 }
 
 void setLights(char direction) {
+    // TODO
 }
 
+void intNorthButtonPressed() {
+    savePedLocation(LIGHT_PED_NORTH);
+}
+
+void intSouthButtonPressed() {
+    savePedLocation(LIGHT_PED_SOUTH);
+}
+
+// TODO: solve this with the magical power of math
 int getPinNumber(char lightName, char dir, char color) {
     switch(lightName) {
         case LIGHT_NORTH:
