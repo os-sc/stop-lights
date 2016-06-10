@@ -1,3 +1,7 @@
+typedef int boolean;
+#define TRUE  1
+#define FALSE 0
+
 #define NONE            0x00
 
 #define LIGHT_NORTH     0x80
@@ -11,13 +15,14 @@
 #define DIR_LEFT        0x40
 #define DIR_RIGHT       0x20
 
-// Note that the Sensors/Buttons have the same values as the corresponding Lights
+// Note that the Sensors/Buttons have the
+// same values as the corresponding Lights
 #define SENS_NORTH      0x80
 #define SENS_EAST       0x40
 #define SENS_SOUTH      0x20
 #define SENS_WEST       0x10
-#define BUTT_WEST       0x08
-#define BUTT_WEST       0x04
+#define BUTT_NORTH      0x08
+#define BUTT_SOUTH      0x04
 
 #define COL_GREEN       0x80
 #define COL_YELLOW      0x40
@@ -55,7 +60,8 @@
 //  00100000 Red
 
 
-char  pedLocation = 0x00;
+char pedLocations = 0x00;
+char carLocations = 0x00;
 
 char lights[5]={
     LIGHT_NORTH,
@@ -64,15 +70,14 @@ char lights[5]={
     LIGHT_WEST,
     LIGHT_PED_NORTH,
     LIGHT_PED_SOUTH
-}
+};
 
 char sensors[3]={
     SENS_NORTH,
     SENS_EAST,
     SENS_SOUTH,
     SENS_WEST
-}
-
+};
 
 void setup() {
     pinMode(getPinNumber(LIGHT_NORTH, DIR_STRAIGHT, COL_GREEN),  OUTPUT);
@@ -128,9 +133,8 @@ void setup() {
     pinMode(getPinNumber(SENS_SOUTH, NONE, NONE), INPUT);
     pinMode(getPinNumber(SENS_WEST,  NONE, NONE), INPUT);
 
-
-    int buttonNorth = getPinNumber(BUTT_NORTH, NONE, NONE),
-    int buttonSouth = getPinNumber(BUTT_south, NONE, NONE),
+    int buttonNorth = getPinNumber(BUTT_NORTH, NONE, NONE);
+    int buttonSouth = getPinNumber(BUTT_SOUTH, NONE, NONE);
     pinMode(buttonNorth, INPUT);
     pinMode(buttonSouth, INPUT);
 
@@ -147,7 +151,7 @@ void setup() {
     );
 
     // On start set all lights to red as a security precaution
-    closeAllLights(noYellow);
+    closeAllLights(TRUE);
 }
 
 void loop() {
@@ -158,8 +162,8 @@ void loop() {
 // If noYellow is supplied, the yellow phase will be skipped
 void closeAllLights(boolean noYellow) {
     // This assumes there are only 6 traffic lights
-    for (var i = 0; i < 6; i++) {
-        char pin = getPin(lights[i], COL_GREEN);
+    for (int i = 0; i < 6; i++) {
+        char pin = getPinNumber(lights[i], COL_GREEN);
         if (pin != -1)
             digitalWrite(pin, LOW);
 
@@ -172,7 +176,7 @@ void closeAllLights(boolean noYellow) {
 
     delay(YELLOW_TIME);
 
-    for (var i = 0; i < 6; i++) {
+    for (int i = 0; i < 6; i++) {
         char pin = getPin(lights[i], COL_YELLOW);
         if (pin != -1)
             digitalWrite(pin, LOW);
@@ -185,15 +189,15 @@ void closeAllLights(boolean noYellow) {
 
 // Saves the Pedestrians location without overwriting the old one
 void savePedLocation(char location) {
-    pedLocation = pedLocation | location;
+    pedLocations = pedLocations | location;
 }
 
 // Returns the Light the pedestrian is waiting at
 // or 0 if there is no pedestrian waiting
 // and resets the variable
 char getAndClearPedLocation() {
-    char location = pedLocation;
-    pedLocation = 0x00;
+    char location = pedLocations;
+    pedLocations = 0x00;
     return location;
 }
 
@@ -201,8 +205,8 @@ char getAndClearPedLocation() {
 // or 0 if there is no car waiting
 char checkForCars() {
     carLocations=0x00;
-    for (var i = 0; i < 6; i++) {
-        char sensor = getPin(sensors[i], NONE);
+    for (int i = 0; i < 6; i++) {
+        char sensor = getPinNumber(sensors[i], NONE);
         if ( digitalRead(sensor) == HIGH )
             carLocations = carLocations | sensor;
     }
@@ -210,13 +214,12 @@ char checkForCars() {
 }
 
 void openLights(char lights, char direction) {
-    // TODO
+    if ()
 }
 
-void setLights(char direction) {
-    // TODO
-}
-
+// interrup function for button presses
+// there is one for each of the directions
+// because interrupt functions cannot have a parameter
 void intNorthButtonPressed() {
     savePedLocation(LIGHT_PED_NORTH);
 }
@@ -225,6 +228,26 @@ void intSouthButtonPressed() {
     savePedLocation(LIGHT_PED_SOUTH);
 }
 
+// Returns the corresponding pin the device is connected to
+// These are defined at the top with the bitmasks
+// This function requires GCC Builtins, the Arduino IDE uses GCC as compiler
+int getPinNumber(int device, int dir, int color) {
+    // Input sanitation: making sure the input is an unsigned 8bit value stored in 32bit
+    device = device & 0xff;
+    dir    = dir    & 0xff;
+    color  = color  & 0xff;
+
+    int lightindex = __builtin_clz(device) - 24;
+    if(dir) {
+        int dirindex = __builtin_clz(device) - 24;
+        int colorindex = __builtin_clz(device) - 24;
+        return lightindex * 9 + dirindex * 3 + colorindex;
+    } else {
+        return 6 * 9 + lightindex;
+    }
+}
+
+/*
 // TODO: solve this with the magical power of math
 int getPinNumber(char lightName, char dir, char color) {
     switch(lightName) {
@@ -358,6 +381,5 @@ int getPinNumber(char lightName, char dir, char color) {
         case BUTT_SOUTH:         return 49;
 
         default: return -1;
-    }
-}
+    }*/
 
